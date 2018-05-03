@@ -1,0 +1,15 @@
+# fxapi.py: 5
+# fxplive.py: 3
+bs4 == 0.0.1
+
+# fxplive.py: 4
+pymitter == 0.2.3
+
+# fxapi.py: 1
+requests == 2.11.1
+
+# socketioclient.py: 13
+six == 1.11.0
+
+# socketioclient.py: 7
+websocket_client == 0.44.0
