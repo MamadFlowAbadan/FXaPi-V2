@@ -9,6 +9,7 @@ I created the api for my own personal use, I made bots and some other cool stuff
 from fxapi import *
 import time
 
+
 @FxpEvents.on('newthread')
 @FxpEvents.on('newcomment')
 def on_event(fxp_obj):
@@ -27,7 +28,6 @@ if user.login():
 
 		while True:
 			time.sleep(1)
-
 else:
 	print ('Login error')
 ```
