@@ -10,6 +10,7 @@ from fxapi import *
 import time
 
 
+@FxpEvents.on('newpm')
 @FxpEvents.on('newthread')
 @FxpEvents.on('newcomment')
 def on_event(fxp_obj):
