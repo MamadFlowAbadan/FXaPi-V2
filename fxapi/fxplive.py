@@ -10,7 +10,7 @@ FxpEvents = EventEmitter(wildcards=True)
 
 class FxpLive(object):
 	def __init__(self, user):
-		super(FxpLive, self).__init__()
+		super().__init__()
 		self.user = user
 		self.connected_forums = []
 		self.socketio = None

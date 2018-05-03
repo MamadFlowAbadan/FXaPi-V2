@@ -19,7 +19,7 @@ class Fxp(object):
         Fxp: Fxp object
     """
 	def __init__(self, username, password):
-		super(Fxp, self).__init__()
+		super().__init__()
 
 		self.sess = requests.Session()
 		self.sess.headers.update({

@@ -1,6 +1,6 @@
 class FxpBaseObj(object):
 	def __init__(self, username, user_id, id, content):
-		super(FxpBaseObj, self).__init__()
+		super().__init__()
 		self.username = username
 		self.user_id = user_id
 		self.id = id
