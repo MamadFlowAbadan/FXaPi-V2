@@ -1,10 +1,20 @@
-# FXaPi-V2
-Fxp python3 api
+![Chatterbot: Machine learning in Python](https://i.imgur.com/42kJunI.png)
 
-## About
-I created the api for my own personal use, I made bots and some other cool stuff.
+# FXaPi
 
-## Example
+FXaPi is a unofficial api moudle for the site [fxp.co.il](https://www.fxp.co.il)
+I wrote this for fun and for my own personal use.
+
+## How it works
+
+The moudle emulates the browser actions.
+The module isn't loading any type of files while sending requests to the site and that makes it faster 
+
+## Installation
+
+This package can be installed from GitHub, I will add the option to download with ```pip``` in the future
+
+## Basic Usage
 ```python
 from fxapi import *
 import time
