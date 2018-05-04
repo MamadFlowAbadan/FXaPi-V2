@@ -3,7 +3,7 @@
 # FXaPi
 
 FXaPi is a unofficial api moudle for the site [fxp.co.il](https://www.fxp.co.il)
-I wrote this for fun and for my own personal use.
+I wrote it for fun and for my own personal use.
 
 ## How it works
 
@@ -34,20 +34,22 @@ if user.login():
 
 	live_fxp = user.live.connect(debug=False)
 	if live_fxp:
-		#listen to events on 21 forum (Diburim)
+		#listen to events on forum "21" (Diburim)
 		live_fxp.register(21)
 
 		while True:
 			time.sleep(1)
+	else:
+		print ('Error while creating live connection')
 else:
 	print ('Login error')
 ```
 
 ## Todo List
 - [x] Finish the base
-- [X] Organize my code
+- [X] Organize the code
 - [ ] Add more web interface features
-- [X] fxpLive class rewriting
+- [ ] Add event queue to catch all 
 
 ## Screenshots
 ![Console](https://image.prntscr.com/image/_ZhGSXDmTPquViv0wQOgUA.png)
