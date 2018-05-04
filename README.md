@@ -7,7 +7,7 @@ I wrote it for fun and for my own personal use.
 
 ## How it works
 
-The moudle emulates the browser actions.
+The moudle emulates the browser actions by sending requests to the site server.
 The module isn't loading any type of files while sending requests to the site and that makes it faster 
 
 ## Installation
