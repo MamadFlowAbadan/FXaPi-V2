@@ -1,4 +1,4 @@
-![Chatterbot: Machine learning in Python](https://i.imgur.com/42kJunI.png)
+![Fxapi](https://i.imgur.com/42kJunI.png)
 
 # FXaPi
 
@@ -12,7 +12,10 @@ The module isn't loading any type of files while sending requests to the site an
 
 ## Installation
 
-This package can be installed from GitHub, I will add the option to download with ```pip``` in the future
+This package can be installed from GitHub or with `pip`
+```
+pip install fxapi
+```
 
 ## Basic Usage
 ```python
@@ -30,7 +33,7 @@ user = Fxp(USERNAME, PASSWORD)
 
 #Try to login in
 if user.login():
-	print ('Login success - %s' % user.username)
+	print (f'Login success - {user.username}')
 
 	live_fxp = user.live.connect(debug=False)
 	if live_fxp:

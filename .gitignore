@@ -1,5 +1,8 @@
-/test_basic.py
-fxapi/__pycache__
+/build
+*.o
+*.pyc
+/dist
+/MANIFEST
+/test.py
 /setup.py
-fxplib/__init__.pyc
 /README.html
