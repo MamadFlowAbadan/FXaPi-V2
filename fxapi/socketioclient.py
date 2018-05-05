@@ -14,7 +14,7 @@ import six
 
 class SIOMessage(object):
 	def __init__(self, engine_io=None, socket_io=None, message=None, parsed=False, socket_io_add=None):
-		super(SIOMessage, self).__init__()
+		super().__init__()
 		self.socket_io = socket_io
 		self.socket_io_add = socket_io_add
 		self.engine_io = engine_io
@@ -96,9 +96,8 @@ class ParseMessagesThread(threading.Thread):
 
 
 class SocketIO_cli(object):
-	"""docstring for SocketIO_cli"""
 	def __init__(self, url=None, cookiejar=None, callbacks={}, on_connect=None, autoreconnect=True):
-		super(SocketIO_cli, self).__init__()
+		super().__init__()
 		self._url = url
 		self.cj = cookiejar
 		self.info = None
@@ -110,11 +109,11 @@ class SocketIO_cli(object):
 		self.reconnect_interval = 10
 
 		self.opener = urllib.request.build_opener(
-				urllib.request.HTTPRedirectHandler(),
-				urllib.request.HTTPHandler(debuglevel=0),
-				urllib.request.HTTPSHandler(debuglevel=0),
-				urllib.request.HTTPCookieProcessor(self.cj)
-			)
+			urllib.request.HTTPRedirectHandler(),
+			urllib.request.HTTPHandler(debuglevel=0),
+			urllib.request.HTTPSHandler(debuglevel=0),
+			urllib.request.HTTPCookieProcessor(self.cj)
+		)
 		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36')] #Amit Avr
 
 		self.raw_messages_queue = queue.Queue()
@@ -129,7 +128,6 @@ class SocketIO_cli(object):
 		self._emit_callback_id = 0
 
 		self.ws = None #Amit Avr
-
 
 		if self._url:
 			self.connect()
@@ -147,11 +145,11 @@ class SocketIO_cli(object):
 		}
 		self.info = None
 		while True:
-			prms['t'] = '%d-%d'%(int(time.time()*1000), polling_c)
+			prms['t'] = f'{int(time.time()*1000)}-{polling_c}'
 			if self.info:
 				prms['sid'] = self.info.get('sid')
 			data = urllib.parse.urlencode(prms)
-			url = '%s?%s'%(sio_url, data)
+			url = f'{sio_url}?{data}'
 			logging.debug(url)
 			try:
 				response = self.opener.open(url)
@@ -162,7 +160,7 @@ class SocketIO_cli(object):
 
 			packets = self.parse_polling_packet(data)
 			for p in packets:
-				logging.debug('receive packet: %s %d', p, p.parsed)
+				logging.debug(f'receive packet: {p} {p.parsed}')
 			if self.info:
 				break
 			for p in packets:
@@ -184,19 +182,17 @@ class SocketIO_cli(object):
 		url = '%s?%s'%(sio_url, data)
 		headers = []
 		if self.cj:
-			cookies = ';'.join(['%s=%s'%(c.name, c.value) for c in self.cj])
-			headers.append('Cookie: %s'%cookies)
+			cookies = ';'.join([f'{c.name}={c.value}' for c in self.cj])
+			headers.append(f'Cookie: {cookies}')
 		logging.debug(url)
 		self.ws = websocket.WebSocketApp(url,
-						on_message = lambda ws, msg: self.on_message(ws, msg),
-						on_error = lambda ws, err: self.on_error(ws,err),
-						on_close = lambda ws: self.on_close(ws),
+						on_open = self.on_open,
+						on_message = self.on_message,
+						on_error = self.on_error,
+						on_close = self.on_close,
 						header = headers)
 						
 		self.ws.connected = False #By AmitAvr
-
-
-		self.ws.on_open = lambda ws: self.on_open(ws)
 
 		self.send_message(SIOMessage(2, message='probe'))
 		self.send_message(SIOMessage(5, message=''))
@@ -213,9 +209,7 @@ class SocketIO_cli(object):
 
 	def start(self):
 		self.stopping = False
-		def run(*args):
-			self.run()
-		self.socket_thread = threading.Thread(target=run)
+		self.socket_thread = threading.Thread(target=self.run)
 		self.socket_thread.setDaemon(True)
 		self.socket_thread.start()
 
@@ -244,16 +238,16 @@ class SocketIO_cli(object):
 		#self.ws = ws
 		self.ws.connected = True #By AmitAvr
 		logging.info('open socket')
-		ping_interval = self.info.get('pingInterval', 30000)/1000 if self.info else 30
+		ping_interval = self.info.get('pingInterval', 30000) / 1000 if self.info else 30
 		self.send_message_thread = SendMessageThread(self.send_messages_queue, self, ping_interval)
 		self.send_message_thread.start()
 
 	def on_message(self, ws, message):
 		p = self.socket_io_message(message)
-		logging.debug('receive packet: %s', p)
+		logging.debug(f'receive packet: {p}')
 
 	def on_error(self, ws, error):
-		logging.error("ERROR: {0}".format(error))
+		logging.error(f"ERROR: {error}")
 
 	def on_close(self, ws):
 		self.ws.connected = False #By AmitAvr
@@ -286,17 +280,17 @@ class SocketIO_cli(object):
 
 	def socket_io_message(self, data, parse_directly=False):
 		rv = SIOMessage()
-		rv.engine_io = ord(data[0]) - ord('0')
+		rv.engine_io = ord(data[0]) - 48 #ord('0')
 		if rv.engine_io in [0,2,3]:
 			#rv.socket_io = 0
 			i = 1
 		else:
-			rv.socket_io = ord(data[1]) - ord('0')
+			rv.socket_io = ord(data[1]) - 48 #ord('0')
 			i = 2
 			if rv.engine_io==4 and rv.socket_io==3:
 				rv.socket_io_add = 0
 				while i < len(data) and data[i] in '1234567890':
-					rv.socket_io_add = rv.socket_io_add * 10 + ord(data[i]) - ord('0')
+					rv.socket_io_add = rv.socket_io_add * 10 + ord(data[i]) - 48 #ord('0')
 					i+=1
 		rv.message = data[i:]
 		if parse_directly:
@@ -351,37 +345,3 @@ class SocketIO_cli(object):
 		else:
 			msg = SIOMessage(4, 2, data, parsed=True)
 		self.send_message(msg)
-
-
-
-def cb(io, data, *ex_prms):
-	if data.get('event') == 'messageReceived':
-		txt = urllib.parse.unquote(data.get('text', ''))
-		txt = txt[::-1]
-		txt = urllib.parse.quote(txt)
-		#io.send_message(SIOMessage(4,2,'["message","%s"]'%data.get('text', '')[::-1]))
-		io.emit( ('message', txt ) )
-	elif data.get('event') == 'userJoined':
-		io.emit( ('message', 'Hello %s'%data.get('name') ) )
-
-def connected(io):
-	#io.send_message(SIOMessage(4,2,'["message","String"]'))
-	io.emit( ('1', ) )
-
-
-def main():
-	logging.basicConfig(level=logging.DEBUG,
-					format='%(asctime)s.%(msecs)03d %(levelname)-5s %(threadName)-10s: %(message)s', datefmt="%H:%M:%S")
-
-	io = SocketIO_cli('http://192.168.1.50:8080', on_connect=connected)
-	io.on('message', cb)
-	#io = SocketIO_cli('https://ws.tradernet.ru')
-	
-	while True:
-		time.sleep(1)
-		#time.sleep(6)
-		#break
-	io.stop()
-
-if __name__=='__main__':
-	main()

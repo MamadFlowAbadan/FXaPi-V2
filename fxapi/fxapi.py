@@ -303,7 +303,6 @@ class Fxp(object):
 		})
 		return not r.url == 'https://www.fxp.co.il/report.php?do=sendemail'
 
-
 	@staticmethod
 	def verify_username(username):
 		r = requests.post('https://www.fxp.co.il/ajax.php', params={
@@ -364,3 +363,32 @@ class Fxp(object):
 		soup = BeautifulSoup(r.text, 'html.parser')
 		return [thread['id'].partition('_')[-1] for thread in soup.find_all(class_='threadbit')]
 		
+
+'''
+Not done yet.
+
+supposed to get all chats ids and the id of the other side
+*stack on - "startwith" parameter*
+
+def get_all_chats(self, start_at=0):
+	r = self.sess.post('https://www.fxp.co.il/private_chat.php?web=1', data={ 
+		'securitytoken': self.securitytoken,
+		'do': 'messagelist',
+		'startwith': 1000,
+		'web': 1
+	})
+
+	soup = BeautifulSoup(r.text, 'html.parser')
+	return {int(pm['data-parent-id']) : 
+		int(pm.find(class_='username')['data-href'].replace('member.php?u=', ''))
+		for pm in soup.find_all(class_='pm')}
+
+'''
+
+
+'''
+I will do this in the future
+class FxpAdmin(Fxp):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+'''
