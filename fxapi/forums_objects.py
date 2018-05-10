@@ -25,6 +25,6 @@ class FxpComment(FxpBaseObj):
 		self.quoted_me = quoted_me
 
 class FxpPm(FxpBaseObj):
-	def __init__(self, username, user_id, id, title, content):
+	def __init__(self, username, user_id, id, parent_id, content):
 		super().__init__(username, user_id, id, content)
-		self.title = title
+		self.parent_id = parent_id

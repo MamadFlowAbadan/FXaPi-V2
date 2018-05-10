@@ -43,7 +43,8 @@ class Fxp(object):
 		"""
 		if not self.logged_in:
 			login_req = self.sess.post('https://www.fxp.co.il/login.php', params={
-				'do': 'login'	
+				'do': 'login',
+				'web_fast_fxp': 1
 			}, data={
 				'vb_login_username': self.username,
 				'vb_login_password': None,
@@ -54,21 +55,36 @@ class Fxp(object):
 				'vb_login_md5password': self.md5password,
 				'vb_login_md5password_utf': self.md5password
 			})
-
+			
 			if 'USER_ID_FXP' in login_req.text:
 				self.user_id = login_req.cookies['bb_userid']
 				self.livefxpext = login_req.cookies['bb_livefxpext']
 
 				home_req = self.sess.get('https://www.fxp.co.il', params={
-					'web_fast_fxp': 0	
+					'web_fast_fxp': 1	
 				})
 				self.securitytoken = re.search('SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
+
+				#7/5
+				self.uienfxp = re.search('uienfxp = "(.+?)";', home_req.text).group(1)
 
 				return True
 			else:
 				return False
 		else:
 			return True
+
+	def refresh_securitytoken(self):
+		"""Refresh session security token
+		"""
+		r = self.sess.post('https://www.fxp.co.il/ajax.php', data={
+			'do': 'securitytoken_uienfxp',
+			'uienfxp': self.uienfxp,
+			'securitytoken': self.securitytoken,
+			't': self.securitytoken
+		})
+
+		self.securitytoken = r.text
 
 	def create_thread(self, title, content, forum_id, prefix=None):
 		"""Create new thread on specific forum 
