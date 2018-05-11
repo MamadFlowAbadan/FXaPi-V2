@@ -11,19 +11,19 @@ from .fxplive import *
 class Fxp(object):
 	"""Init fxp class with user account details
 
-    Args:
-        username (str): Fxp username.
-        password (str): Fxp password.
+	Args:
+		username (str): Fxp username.
+		password (str): Fxp password.
 
-    Returns:
-        Fxp: Fxp object
-    """
+	Returns:
+		Fxp: Fxp object
+	"""
 	def __init__(self, username, password):
 		super().__init__()
 
 		self.sess = requests.Session()
 		self.sess.headers.update({
-			'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36'
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36'
 		})
 
 		self.username = username
@@ -55,17 +55,18 @@ class Fxp(object):
 				'vb_login_md5password': self.md5password,
 				'vb_login_md5password_utf': self.md5password
 			})
-			
+
 			if 'USER_ID_FXP' in login_req.text:
 				self.user_id = login_req.cookies['bb_userid']
 				self.livefxpext = login_req.cookies['bb_livefxpext']
 
 				home_req = self.sess.get('https://www.fxp.co.il', params={
-					'web_fast_fxp': 1	
+					'web_fast_fxp': 1
 				})
-				self.securitytoken = re.search('SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
+				self.securitytoken = re.search(
+					'SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
 
-				#7/5
+				# 7/5
 				self.uienfxp = re.search('uienfxp = "(.+?)";', home_req.text).group(1)
 
 				return True
@@ -87,23 +88,23 @@ class Fxp(object):
 		self.securitytoken = r.text
 
 	def create_thread(self, title, content, forum_id, prefix=None):
-		"""Create new thread on specific forum 
+		"""Create new thread on specific forum
 		Args:
-	        title (str): The thread title.
-	        content (str): The thread content.
-	        forum_id (str): The lib will open a thread on the specific forum.
-	        prefix (str): The thread prefix.
+			title (str): The thread title.
+			content (str): The thread content.
+			forum_id (str): The lib will open a thread on the specific forum.
+			prefix (str): The thread prefix.
 
 		Returns:
 			bool / int: Int for success - id of the new thread, False otherwise.
 		"""
 		r = self.sess.post('https://www.fxp.co.il/newthread.php', params={
 			'do': 'newthread',
-			'f':forum_id
+			'f': forum_id
 		}, data={
 			'prefixid': prefix,
 			'subject': title,
-			'message_backup':'',
+			'message_backup': '',
 			'message': content,
 			'wysiwyg': 1,
 			's': None,
@@ -117,7 +118,7 @@ class Fxp(object):
 			'signature': 1,
 			'parseurl': 1
 		})
-		if not 'https://www.fxp.co.il/newthread.php?' in r.url:
+		if 'https://www.fxp.co.il/newthread.php?' not in r.url:
 			return int(re.search('t=(.*?)&p=(.*?)#post', r.url).group(1))
 		else:
 			return False
@@ -125,9 +126,9 @@ class Fxp(object):
 	def comment(self, thread_id, content, spam_prevention=False):
 		"""Create new comment on specific thread 
 		Args:
-	        thread_id (str/int): The id of the thread.
-	        content (str): The comment content.
-	        spam_prevention (bool): if true the function will add a four digits number to the end of the content.
+			thread_id (str/int): The id of the thread.
+			content (str): The comment content.
+			spam_prevention (bool): if true the function will add a four digits number to the end of the content.
 
 		Returns:
 			bool / int: Int for success - id of the new comment, False otherwise.
@@ -140,19 +141,19 @@ class Fxp(object):
 			'do': 'postreply',
 			't': thread_id
 		}, data={
-			'securitytoken': self.securitytoken, 
-			'ajax': 1, 
+			'securitytoken': self.securitytoken,
+			'ajax': 1,
 			'message_backup': content,
-			'message': content, 
-			'wysiwyg': 1, 
+			'message': content,
+			'wysiwyg': 1,
 			'signature': 1,
 			'fromquickreply': 1,
-			's': None, 
+			's': None,
 			'do': 'postreply',
 			't': thread_id,
-			'p':'who cares',
-			'specifiedpost': 1, 
-			'parseurl': 1, 
+			'p': 'who cares',
+			'specifiedpost': 1,
+			'parseurl': 1,
 			'loggedinuser': self.user_id,
 			'poststarttime': int(time.time())
 		})
@@ -164,9 +165,9 @@ class Fxp(object):
 	def edit_comment(self, comment_id, content, append=False):
 		"""Edit comment
 		Args:
-	        comment_id (str/int): The id of the comment.
-	        content (str): The new content of the comment.
-	        append (bool): if True the the function will connect the old content to the new content.
+			comment_id (str/int): The id of the comment.
+			content (str): The new content of the comment.
+			append (bool): if True the the function will connect the old content to the new content.
 
 		Returns:
 			bool: True for success, False otherwise.
@@ -182,8 +183,8 @@ class Fxp(object):
 				'editorid': 'vB_Editor_QE_1'
 			})
 
-			old_comment = re.search('tabindex="1">([^<]+)<\/textarea>', r.text)
-			if not old_comment == None:
+			old_comment = re.search('tabindex="1">([^<]+)</textarea>', r.text)
+			if old_comment is not None:
 				old_comment = old_comment.group(1)
 			else:
 				old_comment = ''
@@ -203,11 +204,11 @@ class Fxp(object):
 		})
 
 		return '<postbit><![CDATA[' in r.text
-		
+
 	def like(self, comment_id):
-		"""Like comment 
+		"""Like comment
 		Args:
-	        comment_id (str/int): The id of the comment.
+			comment_id (str/int): The id of the comment.
 
 		Returns:
 			bool: True for success, False otherwise.
@@ -219,16 +220,17 @@ class Fxp(object):
 		})
 
 		r = self.sess.get('https://www.fxp.co.il/showthread.php', params={
-			'p': comment_id,	
+			'p': comment_id
 		})
-		return BeautifulSoup(r.text, 'html.parser').find(id = f'{comment_id}_removelike') == None
+		return BeautifulSoup(r.text, 'html.parser').find(
+			id=f'{comment_id}_removelike') is None
 
 	def reply(self, fxp_obj, content, spam_prevention=False):
 		"""Reply to thread / comment / pm - the function will choose the method
 		Args:
-	        fxp_obj (FxpBaseObject): The data from the sender.
-	        content (FxpBaseObject): The data that you want to send.
-	        spam_prevention (bool): if true the function will add a four digits number to the end of the content.
+			fxp_obj (FxpBaseObject): The data from the sender.
+			content (FxpBaseObject): The data that you want to send.
+			spam_prevention (bool): if true the function will add a four digits number to the end of the content.
 
 		Returns:
 			bool / int / dict: -.
@@ -238,72 +240,72 @@ class Fxp(object):
 			comment_id = fxp_obj.__dict__.get('comment_id', fxp_obj.id)
 			return self.comment(thread_id, f'[QUOTE={fxp_obj.username};{comment_id}]{fxp_obj.content}[/QUOTE]{content}', spam_prevention)
 		elif isinstance(fxp_obj, FxpPm):
-			return self.send_private_chat(fxp_obj.username,  fxp_obj.id, content)
+			return self.send_private_chat(fxp_obj.username, fxp_obj.id, content)
 		return False
 
 	def create_private_chat(self, to, title, content):
 		"""Create private chat
 		Args:
-	        to (str): The username of the other side.
-	        title (str): The chat title.
-	        content (str): The message content.
+			to (str): The username of the other side.
+			title (str): The chat title.
+			content (str): The message content.
 
 		Returns:
 			bool / dict: dict if success else return False.
 		"""
 		r = self.sess.post('https://www.fxp.co.il/private_chat.php', data={
-			'securitytoken': self.securitytoken, 
-			'do': 'insertpm', 
-			'recipients': to, 
-			'title': title, 
-			'message': content, 
-			'savecopy': 1, 
-			'signature': 1, 
-			'parseurl': 1, 
+			'securitytoken': self.securitytoken,
+			'do': 'insertpm',
+			'recipients': to,
+			'title': title,
+			'message': content,
+			'savecopy': 1,
+			'signature': 1,
+			'parseurl': 1,
 			'frompage': 1
 		})
 		if 'parentpmid' in r.text:
-			return { 'pmid': r.json()['parentpmid'], 'to': to }
+			return {'pmid': r.json()['parentpmid'], 'to': to}
 		else:
 			return False
 
 	def send_private_chat(self, to, pmid, content):
 		"""Send message to existing chat
 		Args:
-	        to (str): The username of the other side.
-	        pmid (str): The chat id.
-	        content (str): The message content.
+			to (str): The username of the other side.
+			pmid (str): The chat id.
+			content (str): The message content.
 
 		Returns:
 			bool: True if success else return False.
 		"""
 		r = self.sess.post('https://www.fxp.co.il/private_chat.php', data={
-		   'message': content,
-		   'fromquickreply': 1,
-		   'securitytoken': self.securitytoken,
-		   'do': 'insertpm',
-		   'pmid': pmid,
-		   'loggedinuser': self.user_id,
-		   'parseurl': 1,
-		   'signature': 1,
-		   'title':'תגובה להודעה: ',
-		   'recipients': to,
-		   'forward': 0,
-		   'savecopy': 1,
-		   'fastchatpm': 1,
-		   'randoomconv': random.randrange(0, 99999999),
-		   'wysiwyg': 1
+			'message': content,
+			'fromquickreply': 1,
+			'securitytoken': self.securitytoken,
+			'do': 'insertpm',
+			'pmid': pmid,
+			'loggedinuser': self.user_id,
+			'parseurl': 1,
+			'signature': 1,
+			'title': 'תגובה להודעה: ',
+			'recipients': to,
+			'forward': 0,
+			'savecopy': 1,
+			'fastchatpm': 1,
+			'randoomconv': random.randrange(0, 99999999),
+			'wysiwyg': 1
 		})
 		if 'pmid' in r.text:
 			return True
 		else:
-			return False 
+			return False
 
 	def report_comment(self, comment_id, reason):
 		"""Report comment
 		Args:
-	        comment_id (str / int): The id the of the comment.
-	        reason (str): The reason you want to report.
+			comment_id (str / int): The id the of the comment.
+			reason (str): The reason you want to report.
 
 		Returns:
 			bool: True if success else return False.
@@ -328,8 +330,8 @@ class Fxp(object):
 			'do': 'verifyusername',
 			'username': username
 		})
-		print (r.text)
-		return '<status>invalid</status>' and '<status>valid</status>' in r.text 
+		print(r.text)
+		return '<status>invalid</status>' and '<status>valid</status>' in r.text
 
 	@staticmethod
 	def register(username, password, email):
@@ -358,27 +360,26 @@ class Fxp(object):
 		else:
 			return False
 
-	#if this user i a admin it may be a problem - replace "requests" with user session
-	@staticmethod
-	def get_forum_threads(forum_id, page=1, post_per_page=25):
+	def get_forum_threads(self, forum_id, page=1, post_per_page=25):
 		"""Get list of the threads in the forum
 		Args:
-	        forum_id (int): Forum id.
-	        page (int): Page number.
-	        post_per_page (int) Posts per page (MAX=200).
+			forum_id (int): Forum id.
+			page (int): Page number.
+			post_per_page (int) Posts per page (MAX=200).
 
 		Returns:
 			list: List of ids.
 		"""
-		r = requests.get('https://www.fxp.co.il/forumdisplay.php', params={
-			'f': forum_id, 
+		r = self.sess.get('https://www.fxp.co.il/forumdisplay.php', params={
+			'f': forum_id,
 			'page': page,
 			'pp': post_per_page,
 			'web_fast_fxp': 1
 		})
 		soup = BeautifulSoup(r.text, 'html.parser')
-		return [thread['id'].partition('_')[-1] for thread in soup.find_all(class_='threadbit')]
-		
+		return [thread['id'].partition('_')[-1] for thread in soup.find_all(
+			class_='threadbit')]
+
 
 '''
 Not done yet.

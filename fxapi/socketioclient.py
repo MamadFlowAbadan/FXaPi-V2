@@ -1,16 +1,20 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 __author__ = 'Andrey Derevyagin, Edited by avramit'
 __copyright__ = 'Copyright © 2015(2018)'
 
 import websocket
 import logging
-import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.parse
+import urllib.error
+import urllib.request
+import urllib.error
+import urllib.parse
 import time
 import json
-import threading, queue
+import threading
+import queue
 import six
+
 
 class SIOMessage(object):
 	def __init__(self, engine_io=None, socket_io=None, message=None, parsed=False, socket_io_add=None):
@@ -31,7 +35,7 @@ class SIOMessage(object):
 		if self.message is not None:
 			if self.parsed:
 				if isinstance(self.message, six.string_types) or isinstance(self.message, (int, float, complex)):
-					rv += json.dumps( (self.message, ) )
+					rv += json.dumps((self.message, ))
 				else:
 					rv += json.dumps(self.message)
 			else:
@@ -45,7 +49,6 @@ class SIOMessage(object):
 			except ValueError as e:
 				pass
 			self.parsed = True
-
 
 
 class SendMessageThread(threading.Thread):
@@ -92,7 +95,7 @@ class ParseMessagesThread(threading.Thread):
 		while True:
 			msg = self.raw_messages_queue.get(block=True)
 			self.socketio_cli.message_worker(msg)
-			#self.parsed_messages_queue.put(msg)
+			# self.parsed_messages_queue.put(msg)
 
 
 class SocketIO_cli(object):
@@ -114,7 +117,9 @@ class SocketIO_cli(object):
 			urllib.request.HTTPSHandler(debuglevel=0),
 			urllib.request.HTTPCookieProcessor(self.cj)
 		)
-		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36')] #Amit Avr
+
+		# Amit Avr
+		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36')]
 
 		self.raw_messages_queue = queue.Queue()
 		self.parse_messages_thread = ParseMessagesThread(self.raw_messages_queue, self)
@@ -127,7 +132,8 @@ class SocketIO_cli(object):
 		self._emit_callbacks = {}
 		self._emit_callback_id = 0
 
-		self.ws = None #Amit Avr
+		# Amit Avr
+		self.ws = None
 
 		if self._url:
 			self.connect()
@@ -135,9 +141,9 @@ class SocketIO_cli(object):
 	def connect(self):
 		self.connecting = True
 		if not self._url:
-			#raise
-			return 
-		sio_url = self._url+'/socket.io/'
+			# raise
+			return
+		sio_url = self._url + '/socket.io/'
 		polling_c = 0
 		prms = {
 			'EIO': '3',
@@ -154,7 +160,7 @@ class SocketIO_cli(object):
 			try:
 				response = self.opener.open(url)
 			except Exception as e:
-				return 
+				return
 			polling_c += 1
 			data = response.read()
 
@@ -170,36 +176,37 @@ class SocketIO_cli(object):
 		self.start()
 
 	def run(self):
-		sio_url = self._url+'/socket.io/'
+		sio_url = self._url + '/socket.io/'
 		if 'http' == sio_url[:len('http')]:
 			sio_url = 'ws' + sio_url[len('http'):]
 		prms = {
 			'EIO': '3',
 			'transport': 'websocket',
-			'sid': '' #AmitAvr #self.info.get('sid')
+			# sid: AmitAvr #self.info.get('sid')
+			'sid': ''
 		}
 		data = urllib.parse.urlencode(prms)
-		url = '%s?%s'%(sio_url, data)
+		url = f'{sio_url}?{data}'
 		headers = []
 		if self.cj:
 			cookies = ';'.join([f'{c.name}={c.value}' for c in self.cj])
 			headers.append(f'Cookie: {cookies}')
 		logging.debug(url)
 		self.ws = websocket.WebSocketApp(url,
-						on_open = self.on_open,
-						on_message = self.on_message,
-						on_error = self.on_error,
-						on_close = self.on_close,
-						header = headers)
-						
-		self.ws.connected = False #By AmitAvr
+						on_open=self.on_open,
+						on_message=self.on_message,
+						on_error=self.on_error,
+						on_close=self.on_close,
+						header=headers)
+		# AmitAvr
+		self.ws.connected = False
 
 		self.send_message(SIOMessage(2, message='probe'))
 		self.send_message(SIOMessage(5, message=''))
 
 		self.connecting = False
 
-		#self.ws.run_forever(ping_interval=self.info.get('pingInterval', 0)/1000.0, ping_timeout=self.info.get('pingTimeout', 0)/1000.0)
+		# self.ws.run_forever(ping_interval=self.info.get('pingInterval', 0)/1000.0, ping_timeout=self.info.get('pingTimeout', 0)/1000.0)
 		self.ws.run_forever()
 		self.ws = None
 		logging.debug('run ends')
@@ -235,11 +242,16 @@ class SocketIO_cli(object):
 				break
 
 	def on_open(self, ws):
-		#self.ws = ws
-		self.ws.connected = True #By AmitAvr
+		# self.ws = ws
+
+		# AmitAvr
+		self.ws.connected = True
+
 		logging.info('open socket')
-		ping_interval = self.info.get('pingInterval', 30000) / 1000 if self.info else 30
-		self.send_message_thread = SendMessageThread(self.send_messages_queue, self, ping_interval)
+		ping_interval = self.info.get(
+			'pingInterval', 30000) / 1000 if self.info else 30
+		self.send_message_thread = SendMessageThread(
+			self.send_messages_queue, self, ping_interval)
 		self.send_message_thread.start()
 
 	def on_message(self, ws, message):
@@ -250,7 +262,8 @@ class SocketIO_cli(object):
 		logging.error(f"ERROR: {error}")
 
 	def on_close(self, ws):
-		self.ws.connected = False #By AmitAvr
+		# AmitAvr
+		self.ws.connected = False
 
 		logging.info('close socket')
 		if self.send_message_thread:
@@ -260,9 +273,10 @@ class SocketIO_cli(object):
 
 	def parse_polling_packet(self, data):
 		rv = []
-		if len(data)==0:
+		if len(data) == 0:
 			return rv
-		i = 0 
+		i = 0
+		l = 0
 		while i < len(data):
 			if data[i] == '\x00':
 				i += 1
@@ -272,7 +286,7 @@ class SocketIO_cli(object):
 					i += 1
 				i += 1
 
-				rv.append(self.socket_io_message(data[i:i+l], parse_directly=True))
+				rv.append(self.socket_io_message(data[i:i + l], parse_directly=True))
 				i += l
 			else:
 				break
@@ -280,18 +294,18 @@ class SocketIO_cli(object):
 
 	def socket_io_message(self, data, parse_directly=False):
 		rv = SIOMessage()
-		rv.engine_io = ord(data[0]) - 48 #ord('0')
-		if rv.engine_io in [0,2,3]:
-			#rv.socket_io = 0
+		rv.engine_io = ord(data[0]) - 48
+		if rv.engine_io in [0, 2, 3]:
+			# rv.socket_io = 0
 			i = 1
 		else:
-			rv.socket_io = ord(data[1]) - 48 #ord('0')
+			rv.socket_io = ord(data[1]) - 48
 			i = 2
-			if rv.engine_io==4 and rv.socket_io==3:
+			if rv.engine_io == 4 and rv.socket_io == 3:
 				rv.socket_io_add = 0
 				while i < len(data) and data[i] in '1234567890':
-					rv.socket_io_add = rv.socket_io_add * 10 + ord(data[i]) - 48 #ord('0')
-					i+=1
+					rv.socket_io_add = rv.socket_io_add * 10 + ord(data[i]) - 48
+					i += 1
 		rv.message = data[i:]
 		if parse_directly:
 			rv.parse()
@@ -306,7 +320,8 @@ class SocketIO_cli(object):
 				if msg.socket_io_add is not None and msg.socket_io_add in self._emit_callbacks:
 					self._emit_callbacks[msg.socket_io_add](self, msg.message, msg)
 					self._emit_callbacks.pop(msg.socket_io_add, None)
-				elif isinstance(msg.message, list) and isinstance(msg.message[0], six.string_types):
+				elif isinstance(msg.message, list) and isinstance(
+					msg.message[0], six.string_types):
 					cid = msg.message[0]
 					if cid in self.callbacks:
 						if isinstance(self.callbacks[cid], list):
@@ -326,7 +341,7 @@ class SocketIO_cli(object):
 
 	def send_message(self, msg):
 		self.send_messages_queue.put(msg)
-		#self.ws.send(str(msg))
+		# self.ws.send(str(msg))
 
 	def on(self, callback_id, callback):
 		if callback_id in self.callbacks:
