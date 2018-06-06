@@ -15,7 +15,7 @@ class FxpThread(FxpBaseObj):
 		self.title = title
 		self.prefix = prefix
 		self.quoted_me = quoted_me
-	
+
 
 class FxpComment(FxpBaseObj):
 	def __init__(self, username, user_id, id, forum_id, thread_id, thread_title, content, posts_number, quoted_me=False):

@@ -124,7 +124,7 @@ class FxpLive(object):
 			forum_id = int(re.search(r'FORUM_ID_FXP\s*=\s*"(.+?)"', r.text).group(1))
 
 			soup = BeautifulSoup(r.text, 'html.parser')
-			
+
 			# NEW PARSER - 4/2/2018 (web_fast_fxp)
 			comment_html = soup.find_all(class_=f'user_pic_{user_id}')[-1].parent.parent.parent.parent.parent
 			content_parent_html = comment_html.find(class_='content')
@@ -156,7 +156,7 @@ class FxpLive(object):
 			# User images
 			for mainimg in post_content.find_all('div', class_='mainimg'):
 				mainimg.replace_with(f"[IMG]{mainimg.find('img')['data-src']}[/IMG]")
-			
+
 			for voice in post_content.find_all('div', class_='fxpplayer_pr voice_recorder'):
 				voice.replace_with(f"[voice2]{re.search('https://voice2.fcdn.co.il/sound2/(.*?).mp3', voice.find('source')['src']).group(1)}[/voice2]")
 
@@ -171,7 +171,7 @@ class FxpLive(object):
 				'</i>': '[/I]',
 				'<u>': '[U]',
 				'</u>': '[/U]'
-				}.items():
+			}.items():
 				content = content.replace(k, v)
 			content = content.strip()
 

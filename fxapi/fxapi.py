@@ -388,7 +388,7 @@ supposed to get all chats ids and the id of the other side
 *stack on - "startwith" parameter*
 
 def get_all_chats(self, start_at=0):
-	r = self.sess.post('https://www.fxp.co.il/private_chat.php?web=1', data={ 
+	r = self.sess.post('https://www.fxp.co.il/private_chat.php?web=1', data={
 		'securitytoken': self.securitytoken,
 		'do': 'messagelist',
 		'startwith': 1000,
@@ -396,7 +396,7 @@ def get_all_chats(self, start_at=0):
 	})
 
 	soup = BeautifulSoup(r.text, 'html.parser')
-	return {int(pm['data-parent-id']) : 
+	return {int(pm['data-parent-id']) :
 		int(pm.find(class_='username')['data-href'].replace('member.php?u=', ''))
 		for pm in soup.find_all(class_='pm')}
 
