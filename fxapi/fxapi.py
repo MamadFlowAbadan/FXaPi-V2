@@ -56,7 +56,7 @@ class Fxp(object):
 				'vb_login_md5password_utf': self.md5password
 			})
 
-			if 'USER_ID_FXP' in login_req.text:
+			if 'USER_ID_FXP' in login_req.text and not 'ניסית להתחבר במספר הפעמים המרבי' in login_req.text:
 				self.user_id = login_req.cookies['bb_userid']
 				self.livefxpext = login_req.cookies['bb_livefxpext']
 
