@@ -48,6 +48,38 @@ else:
 	print ('Login error')
 ```
 
+## Explanation
+### Fxp Forum Objects:
+  - #### newthread
+    - username
+    - user_id
+    - id
+    - content
+    - forum_id
+    - comment_id
+    - title
+    - prefix
+    - quoted_me
+    - newthread
+    - newcomment
+  - #### newcomment
+    - username
+    - user_id
+    - id
+    - content
+    - thread_id
+    - forum_id
+    - thread_title
+    - posts_number
+    - quoted_me
+  - #### newpm
+    - username
+    - user_id
+    - id
+    - content
+    - parent_id
+
+
 ## Todo List
 - [x] Finish the base
 - [X] Organize the code
