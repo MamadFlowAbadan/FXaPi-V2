@@ -56,19 +56,20 @@ class Fxp(object):
 				'vb_login_md5password_utf': self.md5password
 			})
 
-			if 'USER_ID_FXP' in login_req.text and not 'ניסית להתחבר במספר הפעמים המרבי' in login_req.text:
+			if 'Access denied' not in login_req.text and 'captcha-bypass' not in login_req.text and 'var USER_ID_FXP = "0";' not in login_req.text and 'ניסית להתחבר במספר הפעמים המרבי' not in login_req.text:
 				self.user_id = login_req.cookies['bb_userid']
 				self.livefxpext = login_req.cookies['bb_livefxpext']
 
 				home_req = self.sess.get('https://www.fxp.co.il', params={
 					'web_fast_fxp': 1
 				})
-				self.securitytoken = re.search(
-					'SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
+				self.securitytoken = re.search('SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
 
 				# 7/5
 				self.uienfxp = re.search('uienfxp = "(.+?)";', home_req.text).group(1)
 
+				# 22/7
+				self.logged_in = True
 				return True
 			else:
 				return False
@@ -104,7 +105,8 @@ class Fxp(object):
 		}, data={
 			'prefixid': prefix,
 			'subject': title,
-			'message_backup': '',
+			# 'message_backup': '',
+			'message_backup': content,
 			'message': content,
 			'wysiwyg': 1,
 			's': None,
@@ -124,7 +126,7 @@ class Fxp(object):
 			return False
 
 	def comment(self, thread_id, content, spam_prevention=False):
-		"""Create new comment on specific thread 
+		"""Create new comment on specific thread
 		Args:
 			thread_id (str/int): The id of the thread.
 			content (str): The comment content.
@@ -381,11 +383,62 @@ class Fxp(object):
 			class_='threadbit')]
 
 
+class FastFxp(Fxp):
+	def __init__(self):
+		super().__init__('', '')
+		self.md5password = None
+
+	def create(self):
+		self.onesignal_uuid = self.sess.post('https://onesignal.com/api/v1/players', data={
+			'device_type': 5,
+			'language': 'en',
+			'timezone': 10800,
+			'device_os': 67,
+			'sdk': '150300',
+			'notification_types': 1,
+			'delivery_platform': 5,
+			'browser_name': 'Chrome',
+			'browser_version': 67,
+			'operating_system': 'Microsoft Windows',
+			'operating_system_version': '10',
+			'device_platform': 'desktop',
+			'device_model': 'Win32',
+			'app_id': '56dedbbf-a266-4d9d-9334-dd05d918a530',
+			'identifier': str(random.randrange(1, 10**10)),
+		}).json()['id']
+
+		create_req = self.sess.post('https://www.fxp.co.il/ajax.php', data={
+			'do': 'fast_question_1',
+			'securitytoken': 'guest',
+			'uuid': self.onesignal_uuid,
+			'time': int(time.time())
+		})
+
+		if 'userid' in create_req.text:
+			self.ptoken = create_req.json()['ptoken']
+
+			self.user_id = create_req.cookies['bb_userid']
+			self.securitytoken = create_req.json()['securitytoken']
+
+			uesr_info_req = self.sess.get('https://www.fxp.co.il/member.php', params={
+				'u': self.user_id,
+				'web_fast_fxp': 1
+			})
+			self.username = re.search('<span class="member_username"><span style="(.+?)">(.+?)</span></span>', uesr_info_req.text).group(2)
+			self.uienfxp = re.search('uienfxp = "(.+?)";', uesr_info_req.text).group(1)
+			self.livefxpext = re.search('{"userid":"(.+?)",', uesr_info_req.text).group(1)
+
+			self.logged_in = True
+			return True
+		else:
+			return False
+
+
 '''
 Not done yet.
 
 supposed to get all chats ids and the id of the other side
-*stack on - "startwith" parameter*
+*stuck on - "startwith" parameter*
 
 def get_all_chats(self, start_at=0):
 	r = self.sess.post('https://www.fxp.co.il/private_chat.php?web=1', data={

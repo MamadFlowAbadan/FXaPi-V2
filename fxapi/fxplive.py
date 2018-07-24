@@ -69,7 +69,7 @@ class FxpLive(object):
 
 	def on_new_thread(self, io, data, *ex_prms):
 		try:
-			if data['poster'] == self.user.user_id: 
+			if data['poster'] == self.user.user_id:
 				return
 			r = self.user.sess.get('https://www.fxp.co.il/showthread.php', params={
 				't': data['id'],
