@@ -119,7 +119,7 @@ class SocketIO_cli(object):
 		)
 
 		# Amit Avr
-		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36')]
+		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36')]
 
 		self.raw_messages_queue = queue.Queue()
 		self.parse_messages_thread = ParseMessagesThread(self.raw_messages_queue, self)

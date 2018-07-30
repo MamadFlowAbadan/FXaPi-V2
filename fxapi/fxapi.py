@@ -14,20 +14,26 @@ class Fxp(object):
 	Args:
 		username (str): Fxp username.
 		password (str): Fxp password.
+		fastfxp_login (bool): To enable FastFxp class login (vb_password).
 
 	Returns:
 		Fxp: Fxp object
 	"""
-	def __init__(self, username, password):
+	def __init__(self, username, password, fastfxp_login=False):
 		super().__init__()
 
 		self.sess = requests.Session()
 		self.sess.headers.update({
-			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36'
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
 		})
 
+		self.fastfxp_login = fastfxp_login
+
 		self.username = username
-		self.md5password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
+		# look at me
+		self.md5password = hashlib.md5(password.encode('utf-8')).hexdigest() if not self.fastfxp_login else password
+
 		self.securitytoken = 'guest'
 		self.user_id = None
 		self.logged_in = False
@@ -42,27 +48,44 @@ class Fxp(object):
 			bool: True for success, False otherwise.
 		"""
 		if not self.logged_in:
-			login_req = self.sess.post('https://www.fxp.co.il/login.php', params={
-				'do': 'login',
-				'web_fast_fxp': 1
-			}, data={
-				'vb_login_username': self.username,
-				'vb_login_password': None,
-				's': None,
-				'securitytoken': self.securitytoken,
-				'do': 'login',
-				'cookieuser': 1,
-				'vb_login_md5password': self.md5password,
-				'vb_login_md5password_utf': self.md5password
-			})
+			if self.fastfxp_login:
+				temp_fastfxp_user_id = self.get_userid_by_name(self.username)
+				login_req = self.sess.get('https://www.fxp.co.il', params={
+					'do': 'login',
+					'web_fast_fxp': 1
+				}, cookies={
+					'bb_userid': temp_fastfxp_user_id,
+					'bb_password': self.md5password
+				})
+			else:
+				login_req = self.sess.post('https://www.fxp.co.il/login.php', params={
+					'do': 'login',
+					'web_fast_fxp': 1
+				}, data={
+					'vb_login_username': self.username,
+					'vb_login_password': None,
+					's': None,
+					'securitytoken': self.securitytoken,
+					'do': 'login',
+					'cookieuser': 1,
+					'vb_login_md5password': self.md5password,
+					'vb_login_md5password_utf': self.md5password
+				})
 
 			if 'Access denied' not in login_req.text and 'captcha-bypass' not in login_req.text and 'var USER_ID_FXP = "0";' not in login_req.text and 'ניסית להתחבר במספר הפעמים המרבי' not in login_req.text:
-				self.user_id = login_req.cookies['bb_userid']
-				self.livefxpext = login_req.cookies['bb_livefxpext']
+				if not self.fastfxp_login:
+					self.user_id = login_req.cookies['bb_userid']
+					self.livefxpext = login_req.cookies['bb_livefxpext']
 
-				home_req = self.sess.get('https://www.fxp.co.il', params={
-					'web_fast_fxp': 1
-				})
+					home_req = self.sess.get('https://www.fxp.co.il', params={
+						'web_fast_fxp': 1
+					})
+				else:
+					# yes i know i am lazy
+					home_req = login_req
+					self.user_id = temp_fastfxp_user_id
+					self.livefxpext = re.search('{"userid":"(.+?)",', home_req.text).group(1)
+
 				self.securitytoken = re.search('SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
 
 				# 7/5
@@ -382,6 +405,17 @@ class Fxp(object):
 		return [thread['id'].partition('_')[-1] for thread in soup.find_all(
 			class_='threadbit')]
 
+	@staticmethod
+	def get_userid_by_name(username):
+		r = requests.get('https://www.fxp.co.il/member.php', params={
+			'username': username
+		})
+		t = re.search('data-followid="(.+?)"', r.text)
+		if t:
+			return t.group(1)
+		else:
+			return False
+
 
 class FastFxp(Fxp):
 	def __init__(self):
@@ -418,6 +452,7 @@ class FastFxp(Fxp):
 			self.ptoken = create_req.json()['ptoken']
 
 			self.user_id = create_req.cookies['bb_userid']
+			self.md5password = create_req.cookies['bb_password']
 			self.securitytoken = create_req.json()['securitytoken']
 
 			uesr_info_req = self.sess.get('https://www.fxp.co.il/member.php', params={
@@ -427,7 +462,6 @@ class FastFxp(Fxp):
 			self.username = re.search('<span class="member_username"><span style="(.+?)">(.+?)</span></span>', uesr_info_req.text).group(2)
 			self.uienfxp = re.search('uienfxp = "(.+?)";', uesr_info_req.text).group(1)
 			self.livefxpext = re.search('{"userid":"(.+?)",', uesr_info_req.text).group(1)
-
 			self.logged_in = True
 			return True
 		else:
