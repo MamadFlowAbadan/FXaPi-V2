@@ -31,7 +31,7 @@ class Fxp(object):
 
 		self.username = username
 
-		# look at me
+		# some lazy hack to fix the fastfxp_login option
 		self.md5password = hashlib.md5(password.encode('utf-8')).hexdigest() if not self.fastfxp_login else password
 
 		self.securitytoken = 'guest'
@@ -50,7 +50,9 @@ class Fxp(object):
 		if not self.logged_in:
 			if self.fastfxp_login:
 				temp_fastfxp_user_id = self.get_userid_by_name(self.username)
-				login_req = self.sess.get('https://www.fxp.co.il', params={
+				if not temp_fastfxp_user_id:
+					return False
+				login_req = home_req = self.sess.get('https://www.fxp.co.il', params={
 					'do': 'login',
 					'web_fast_fxp': 1
 				}, cookies={
@@ -81,8 +83,6 @@ class Fxp(object):
 						'web_fast_fxp': 1
 					})
 				else:
-					# yes i know i am lazy
-					home_req = login_req
 					self.user_id = temp_fastfxp_user_id
 					self.livefxpext = re.search('{"userid":"(.+?)",', home_req.text).group(1)
 

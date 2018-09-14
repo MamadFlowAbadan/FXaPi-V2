@@ -1,3 +1,6 @@
+import json
+
+
 class FxpBaseObj(object):
 	def __init__(self, username, user_id, id, content):
 		super().__init__()
@@ -5,6 +8,9 @@ class FxpBaseObj(object):
 		self.user_id = user_id
 		self.id = id
 		self.content = content
+
+	def __str__(self):
+		return f'[{self.__class__.__name__}] {json.dumps(self.__dict__, indent=4, ensure_ascii=False)}'
 
 
 class FxpThread(FxpBaseObj):

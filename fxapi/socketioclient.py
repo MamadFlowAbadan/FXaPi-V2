@@ -77,7 +77,7 @@ class SendMessageThread(threading.Thread):
 			except queue.Empty as e:
 				msg = None
 			if msg:
-				logging.debug('send message: %s', str(msg))
+				logging.debug(f'send message: {str(msg)}')
 				self.socketio_cli.ws.send(str(msg))
 
 	def stop(self):
@@ -98,7 +98,7 @@ class ParseMessagesThread(threading.Thread):
 			# self.parsed_messages_queue.put(msg)
 
 
-class SocketIO_cli(object):
+class SocketIO(object):
 	def __init__(self, url=None, cookiejar=None, callbacks={}, on_connect=None, autoreconnect=True):
 		super().__init__()
 		self._url = url
@@ -192,12 +192,7 @@ class SocketIO_cli(object):
 			cookies = ';'.join([f'{c.name}={c.value}' for c in self.cj])
 			headers.append(f'Cookie: {cookies}')
 		logging.debug(url)
-		self.ws = websocket.WebSocketApp(url,
-						on_open=self.on_open,
-						on_message=self.on_message,
-						on_error=self.on_error,
-						on_close=self.on_close,
-						header=headers)
+		self.ws = websocket.WebSocketApp(url, on_open=self.on_open, on_message=self.on_message, on_error=self.on_error, on_close=self.on_close, header=headers)
 		# AmitAvr
 		self.ws.connected = False
 
@@ -259,7 +254,7 @@ class SocketIO_cli(object):
 		logging.debug(f'receive packet: {p}')
 
 	def on_error(self, ws, error):
-		logging.error(f"ERROR: {error}")
+		logging.error(f'ERROR: {error}')
 
 	def on_close(self, ws):
 		# AmitAvr
@@ -316,7 +311,7 @@ class SocketIO_cli(object):
 	def message_worker(self, msg):
 		msg.parse()
 		if msg.engine_io == 4:
-			if msg.socket_io in [2,3]:
+			if msg.socket_io in [2, 3]:
 				if msg.socket_io_add is not None and msg.socket_io_add in self._emit_callbacks:
 					self._emit_callbacks[msg.socket_io_add](self, msg.message, msg)
 					self._emit_callbacks.pop(msg.socket_io_add, None)

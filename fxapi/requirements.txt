@@ -2,9 +2,6 @@
 # fxplive.py: 3
 bs4 == 0.0.1
 
-# fxplive.py: 4
-pymitter == 0.2.3
-
 # fxapi.py: 1
 requests == 2.11.1
 

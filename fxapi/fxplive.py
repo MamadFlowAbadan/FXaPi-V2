@@ -1,12 +1,11 @@
 import json
 import re
 from bs4 import BeautifulSoup
-from pymitter import EventEmitter
-from .socketioclient import SocketIO_cli
+from .event_system import EventSystem
+from .socketioclient import SocketIO
 from .forums_objects import *
 
-
-FxpEvents = EventEmitter(wildcards=True)
+fxp_events = EventSystem()
 
 
 class FxpLive(object):
@@ -19,7 +18,7 @@ class FxpLive(object):
 	def connect(self, debug=False):
 		if self.socketio is None:
 			if self.user.livefxpext is not None:
-				self.socketio = SocketIO_cli('https://socket5.fxp.co.il', on_connect=print('Connected'), callbacks={
+				self.socketio = SocketIO('https://socket5.fxp.co.il', on_connect=print('SocketIO connection created'), callbacks={
 					'update_post': self.on_new_comment,
 					'newtread': self.on_new_thread,
 					'newpmonpage': self.on_new_pm
@@ -27,8 +26,10 @@ class FxpLive(object):
 				if debug:
 					self.socketio.ws.on_message = lambda ws, msg: (ws.on_message, print(msg))
 
-				# Auth to receive simple events (pm/tags)
-				self.socketio.emit(['message', json.dumps({'userid': self.user.livefxpext})])
+				# auth to receive simple events (pm/tags)
+				self.socketio.emit(['message', json.dumps({
+					'userid': self.user.livefxpext
+				})])
 
 			else:
 				print('Please login before you trtying to create live connection')
@@ -38,7 +39,7 @@ class FxpLive(object):
 
 	def register(self, forum_id, raw=False):
 		if not raw:
-			# Get the the server-side forum id from the forum page
+			# get the the server-side forum id from the forum page
 			forum_nodejs_id = re.search('"froum":"(.+?)"', self.user.sess.get('https://www.fxp.co.il/forumdisplay.php', params={
 				'f': forum_id,
 				'web_fast_fxp': 1
@@ -46,7 +47,10 @@ class FxpLive(object):
 		else:
 			forum_nodejs_id = forum_id
 
-		self.socketio.emit(['message', json.dumps({'userid': self.user.livefxpext, 'froum': forum_nodejs_id})])
+		self.socketio.emit(['message', json.dumps({
+			'userid': self.user.livefxpext,
+			'froum': forum_nodejs_id
+		})])
 		print(f'Register new forum to live events: {forum_id}')
 
 	def on_new_pm(self, io, data, *ex_prms):
@@ -57,7 +61,7 @@ class FxpLive(object):
 
 			data['messagelist'] = data['messagelist'].replace('&amp;quot;', '"').replace('amp;amp;', '^').replace('&amp;lt;', '<').replace('&amp;gt;', '>')
 
-			FxpEvents.emit('newpm', FxpPm(
+			fxp_events.emit('newpm', FxpPm(
 				id=int(data['pmid']),
 				username=data['username'],
 				user_id=user_id,
@@ -94,7 +98,7 @@ class FxpLive(object):
 				quoted_me = any([self.user.username in q.text for q in thread_content.find_all(class_='bbcode_postedby')])
 				thread_content.find(class_='bbcode_container').decompose()
 
-			FxpEvents.emit('newthread', FxpThread(
+			fxp_events.emit('newthread', FxpThread(
 				username=data['username'],
 				user_id=data['poster'],
 				id=data['id'],
@@ -155,7 +159,7 @@ class FxpLive(object):
 
 			# User images
 			for mainimg in post_content.find_all('div', class_='mainimg'):
-				mainimg.replace_with(f"[IMG]{mainimg.find('img')['data-src']}[/IMG]")
+				mainimg.replace_with(f'[IMG]{mainimg.find("img")["data-src"]}[/IMG]')
 
 			for voice in post_content.find_all('div', class_='fxpplayer_pr voice_recorder'):
 				voice.replace_with(f"[voice2]{re.search('https://voice2.fcdn.co.il/sound2/(.*?).mp3', voice.find('source')['src']).group(1)}[/voice2]")
@@ -163,7 +167,7 @@ class FxpLive(object):
 			for a in post_content.find_all('a'):
 				a.replace_with(f"[URL={a['href']}]{a.text}[/URL]")
 
-			content = str(post_content).replace('<blockquote class="postcontent restore ">', '').replace('</blockquote>', '')
+			content = str(post_content).replace('<blockquote class="postcontent restore ">', '').replace('</blockquote>', '').strip()
 			for k, v in {
 				'<b>': '[B]',
 				'</b>': '[/B]',
@@ -173,12 +177,8 @@ class FxpLive(object):
 				'</u>': '[/U]'
 			}.items():
 				content = content.replace(k, v)
-			content = content.strip()
 
-			# Remove empty lines
-			# content = '\n'.join(list(filter(None, post_content.text.splitlines()))).strip()
-
-			FxpEvents.emit('newcomment', FxpComment(
+			fxp_events.emit('newcomment', FxpComment(
 				username=username,
 				user_id=user_id,
 				id=int(comment_id),
