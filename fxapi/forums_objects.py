@@ -1,39 +1,37 @@
+from dataclasses import dataclass
 import json
 
 
-class FxpBaseObj(object):
-	def __init__(self, username, user_id, id, content):
-		super().__init__()
-		self.username = username
-		self.user_id = user_id
-		self.id = id
-		self.content = content
+@dataclass
+class FxpBaseObj:
+	username: str
+	user_id: int
+	id: int
+	content: int
 
 	def __str__(self):
 		return f'[{self.__class__.__name__}] {json.dumps(self.__dict__, indent=4, ensure_ascii=False)}'
 
 
+@dataclass
 class FxpThread(FxpBaseObj):
-	def __init__(self, username, user_id, id, forum_id, comment_id, title, content, prefix='', quoted_me=False):
-		super().__init__(username, user_id, id, content)
-		self.forum_id = forum_id
-		self.comment_id = comment_id
-		self.title = title
-		self.prefix = prefix
-		self.quoted_me = quoted_me
+	forum_id: int
+	comment_id: int
+	title: str
+	prefix: str = ''
+	quoted_me: bool = False
 
 
+@dataclass
 class FxpComment(FxpBaseObj):
-	def __init__(self, username, user_id, id, forum_id, thread_id, thread_title, content, posts_number, quoted_me=False):
-		super().__init__(username, user_id, id, content)
-		self.thread_id = thread_id
-		self.forum_id = forum_id
-		self.thread_title = thread_title
-		self.posts_number = posts_number
-		self.quoted_me = quoted_me
+	thread_id: int
+	forum_id: int
+	thread_title: str
+	posts_number: int
+	quoted_me: bool = False
 
 
+@dataclass
 class FxpPm(FxpBaseObj):
-	def __init__(self, username, user_id, id, parent_id, content):
-		super().__init__(username, user_id, id, content)
-		self.parent_id = parent_id
+	parent_id: int
+	html_content: str = ''

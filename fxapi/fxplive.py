@@ -66,7 +66,8 @@ class FxpLive(object):
 				username=data['username'],
 				user_id=user_id,
 				parent_id=data['parentpmid_node'],
-				content=data['messagelist']
+				content=data['messagelist'],
+				html_content=data['message']
 			))
 		except Exception as e:
 			pass

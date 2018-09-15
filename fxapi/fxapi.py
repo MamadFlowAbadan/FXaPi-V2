@@ -8,7 +8,7 @@ import random
 from .fxplive import *
 
 
-class Fxp(object):
+class Fxp:
 	"""Init fxp class with user account details
 
 	Args:
@@ -20,8 +20,6 @@ class Fxp(object):
 		Fxp: Fxp object
 	"""
 	def __init__(self, username, password, fastfxp_login=False):
-		super().__init__()
-
 		self.sess = requests.Session()
 		self.sess.headers.update({
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
@@ -100,8 +98,7 @@ class Fxp(object):
 			return True
 
 	def refresh_securitytoken(self):
-		"""Refresh session security token
-		"""
+		"""Refresh session security token"""
 		r = self.sess.post('https://www.fxp.co.il/ajax.php', data={
 			'do': 'securitytoken_uienfxp',
 			'uienfxp': self.uienfxp,
@@ -348,6 +345,13 @@ class Fxp(object):
 
 	@staticmethod
 	def verify_username(username):
+		"""Check if username is ready to use / if already exists
+		Args:
+			username (str)
+
+		Returns:
+			bool
+		"""
 		r = requests.post('https://www.fxp.co.il/ajax.php', params={
 			'do': 'verifyusername'
 		}, data={
@@ -355,11 +359,23 @@ class Fxp(object):
 			'do': 'verifyusername',
 			'username': username
 		})
-		print(r.text)
-		return '<status>invalid</status>' and '<status>valid</status>' in r.text
+		return '<status>valid</status>' and '<status>invalid</status>' not in r.text
 
 	@staticmethod
 	def register(username, password, email):
+		"""Register user
+		Args:
+			username (str)
+			password (str)
+			email (str)
+
+		Returns:
+			bool / Fxp: (if failed return bool)
+		"""
+
+		if not self.verify_username(username):
+			return False
+
 		md5password = hashlib.md5(password.encode('utf-8')).hexdigest()
 		r = requests.post('https://www.fxp.co.il/register.php', params={
 			'do': 'addmember'
@@ -407,6 +423,13 @@ class Fxp(object):
 
 	@staticmethod
 	def get_userid_by_name(username):
+		"""Get userid by username
+		Args:
+			username (str)
+
+		Returns:
+			bool / str: (if failed return bool)
+		"""
 		r = requests.get('https://www.fxp.co.il/member.php', params={
 			'username': username
 		})
@@ -418,11 +441,21 @@ class Fxp(object):
 
 
 class FastFxp(Fxp):
+	"""Create user without any password or username
+
+	Returns:
+		Fxp: Fxp object
+	"""
 	def __init__(self):
 		super().__init__('', '')
 		self.md5password = None
 
 	def create(self):
+		"""Create user without any password or username
+
+		Returns:
+			bool
+		"""
 		self.onesignal_uuid = self.sess.post('https://onesignal.com/api/v1/players', data={
 			'device_type': 5,
 			'language': 'en',
@@ -487,12 +520,4 @@ def get_all_chats(self, start_at=0):
 		int(pm.find(class_='username')['data-href'].replace('member.php?u=', ''))
 		for pm in soup.find_all(class_='pm')}
 
-'''
-
-
-'''
-I will do this in the future
-class FxpAdmin(Fxp):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
 '''
