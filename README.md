@@ -12,7 +12,7 @@ The module isn't loading any type of files while sending requests to the site an
 
 ## Installation
 
-This package can be installed from GitHub or with `pip`
+This package can be installed from GitHub or with `pip` (please install it from github if you can)
 ```
 pip install fxapi
 ```
@@ -22,14 +22,28 @@ pip install fxapi
 from fxapi import *
 import time
 
-user = Fxp(USERNAME, PASSWORD)
+user = Fxp('USERNAME', 'PASSWORD')
 
 
-@fxp_events.on('newpm')
-@fxp_events.on('newthread')
-@fxp_events.on('newcomment')
+@user.live.events.on(FxpPm)
+def on_thread(fxp_obj):
+	print('New pm')
+
+
+@user.live.events.on(FxpComment)
+def on_comment(fxp_obj):
+	print('New comment')
+
+
+@user.live.events.on(FxpThread)
+def on_thread(fxp_obj):
+	print('New thread')
+
+
+# you can use several events together
+@user.live.events.on([FxpThread, FxpComment])
 def on_event(fxp_obj):
-	print(fxp_obj)
+	print('New thread / comment')
 
 
 if user.login():
@@ -37,11 +51,7 @@ if user.login():
 	live = user.live.connect(debug=False)
 	if live:
 		live.register(21)
-		try:
-			while True:
-				time.sleep(1)
-		except KeyboardInterrupt:
-			exit('Bye Bye')
+		live.idle()
 else:
 	print('Login failed')
 ```

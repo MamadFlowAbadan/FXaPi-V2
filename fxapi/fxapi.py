@@ -2,7 +2,7 @@ import requests
 import hashlib
 import re
 import time
-from bs4 import BeautifulSoup
+import leaf
 import random
 
 from .fxplive import *
@@ -22,7 +22,7 @@ class Fxp:
 	def __init__(self, username, password, fastfxp_login=False):
 		self.sess = requests.Session()
 		self.sess.headers.update({
-			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36'
 		})
 
 		self.fastfxp_login = fastfxp_login
@@ -235,17 +235,20 @@ class Fxp:
 		Returns:
 			bool: True for success, False otherwise.
 		"""
+
 		r = self.sess.post('https://www.fxp.co.il/ajax.php', data={
 			'do': 'add_like',
 			'postid': comment_id,
 			'securitytoken': self.securitytoken
 		})
 
-		r = self.sess.get('https://www.fxp.co.il/showthread.php', params={
+		r = self.sess.get(f'https://www.fxp.co.il/showthread.php#post{comment_id}', params={
 			'p': comment_id
 		})
-		return BeautifulSoup(r.text, 'html.parser').find(
-			id=f'{comment_id}_removelike') is None
+
+		# ----------- fix this pls ----------- will return true if the comment doesnt exists ----------
+
+		return leaf.parse(r.text).xpath(f'//span[@id="{comment_id}_removelike"]') == []
 
 	def reply(self, fxp_obj, content, spam_prevention=False):
 		"""Reply to thread / comment / pm - the function will choose the method
@@ -257,6 +260,10 @@ class Fxp:
 		Returns:
 			bool / int / dict: -.
 		"""
+
+		# hack - fix new line - new filter
+		fxp_obj.content = fxp_obj.content.replace('\n', '<br>')
+
 		if isinstance(fxp_obj, (FxpComment, FxpThread)):
 			thread_id = fxp_obj.__dict__.get('thread_id', fxp_obj.id)
 			comment_id = fxp_obj.__dict__.get('comment_id', fxp_obj.id)
@@ -417,9 +424,7 @@ class Fxp:
 			'pp': post_per_page,
 			'web_fast_fxp': 1
 		})
-		soup = BeautifulSoup(r.text, 'html.parser')
-		return [thread['id'].partition('_')[-1] for thread in soup.find_all(
-			class_='threadbit')]
+		return [int(thread_id.replace('thread_', '')) for thread_id in leaf.parse(r.text).xpath(f'//ul[@id="threads"]//li/@id')]
 
 	@staticmethod
 	def get_userid_by_name(username):

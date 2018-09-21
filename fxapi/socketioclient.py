@@ -1,5 +1,5 @@
 __author__ = 'Andrey Derevyagin, Edited by avramit'
-__copyright__ = 'Copyright © 2015(2018)'
+__copyright__ = 'Copyright © 2015'
 
 import websocket
 import logging
@@ -16,9 +16,8 @@ import queue
 import six
 
 
-class SIOMessage(object):
+class SIOMessage:
 	def __init__(self, engine_io=None, socket_io=None, message=None, parsed=False, socket_io_add=None):
-		super().__init__()
 		self.socket_io = socket_io
 		self.socket_io_add = socket_io_add
 		self.engine_io = engine_io
@@ -98,9 +97,8 @@ class ParseMessagesThread(threading.Thread):
 			# self.parsed_messages_queue.put(msg)
 
 
-class SocketIO(object):
+class SocketIO():
 	def __init__(self, url=None, cookiejar=None, callbacks={}, on_connect=None, autoreconnect=True):
-		super().__init__()
 		self._url = url
 		self.cj = cookiejar
 		self.info = None

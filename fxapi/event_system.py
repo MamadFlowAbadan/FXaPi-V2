@@ -1,7 +1,7 @@
 from threading import Thread
 
 
-class EventSystem():
+class EventSystem:
 	def __init__(self):
 		self.events = {}
 
@@ -13,7 +13,7 @@ class EventSystem():
 			if isinstance(event, list):
 				for item in event:
 					_set(item)
-			elif isinstance(event, str):
+			else:
 				_set(event)
 
 			return function
