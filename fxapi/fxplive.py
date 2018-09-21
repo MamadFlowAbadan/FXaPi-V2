@@ -39,7 +39,7 @@ class FxpLive:
 	def register(self, forum_id, raw=False):
 		if not raw:
 			# get the the server-side forum id from the forum page
-			forum_nodejs_id = re.search('"froum":"(.+?)"', self.user.sess.get('https://www.fxp.co.il/forumdisplay.php', params={
+			forum_nodejs_id = re.search(r'"froum":"(.+?)"', self.user.sess.get('https://www.fxp.co.il/forumdisplay.php', params={
 				'f': forum_id,
 				'web_fast_fxp': 1
 			}).text).group(1)
@@ -112,16 +112,29 @@ class FxpLive:
 			if user_id == self.user.user_id:
 				return
 
+			'''
 			r = self.user.sess.get('https://www.fxp.co.il/showthread.php', params={
 				't': data['id'],
 				'page': data['pages'],
+				'web_fast_fxp': 1
+			})
+			# comment = document.xpath(f'//div[@class="user-pic-holder user_pic_{user_id}"]/../../../../..')[-1]
+			'''
+
+			# new way
+			r = self.user.sess.get('https://www.fxp.co.il/showthread.php', params={
+				't': data['id'],
+				'pp': 1,
+				'page': data['posts'] + 1,
 				'web_fast_fxp': 1
 			})
 
 			forum_id = int(re.search(r'FORUM_ID_FXP\s*=\s*"(.+?)"', r.text).group(1))
 
 			document = leaf.parse(r.text)
-			comment = document.xpath(f'//div[@class="user-pic-holder user_pic_{user_id}"]/../../../../..')[-1]
+
+			comment = document.xpath(f'//ol[@id="posts"]//li')[0]
+
 			comment_content = comment.xpath('.//blockquote[@class="postcontent restore "]')[0]
 			comment_id = int(comment.id.replace('post_', ''))
 			parsed_content = comment_content.parse(self.bbcode_formatter).strip()
@@ -140,53 +153,64 @@ class FxpLive:
 				quoted_me=quoted_me
 			))
 		except Exception as e:
-			# print(e)
+			# raise
 			pass
 
 	def is_quoted_me(self, document):
 		for quote in document.xpath('//div[@class="bbcode_postedby"]'):
-			if '_Mitzi_' == quote.xpath('.//strong/text()')[0]:
+			if self.user.username == quote.xpath('.//strong/text()')[0]:
 				return True
 		return False
 
 	@staticmethod
 	def bbcode_formatter(element, children):
-		class_name = element.attrib.get('class')
+		try:
+			class_name = element.attrib.get('class', False)
 
-		# fix voice message
-		if class_name == 'fxpplayer_pr':
-			voice_id = re.search(r'([^/]*)\.[^.]*$', element.get('audio').get('source').src).group(1)
-			return f'[voice2]{voice_id}[/voice2]'
+			# fix voice message
+			if class_name == 'fxpplayer_pr':
+				voice_id = re.search(r'([^/]*)\.[^.]*$', element.get('audio').get('source').src).group(1)
+				return f'[voice2]{voice_id}[/voice2]'
 
-		# remove quote
-		if class_name == 'bbcode_container':
-			return ''
+			# remove quote
+			if class_name == 'bbcode_container':
+				return ''
 
-		# fix images
-		if element.tag == 'img':
-			if class_name == 'lazy':
-				return f'[IMG]{element.attrib.get("data-src")}[/IMG]'
-			if class_name == 'inlineimg' and element.title:
-				return f'[IMG]{element.src}[/IMG]'
-			if class_name == 'emojifxp':
-				emoji_id = re.search(r'([^/]*)\.[^.]*$', element.src).group(1)
-				return f'[emojifxp={element.alt}]{emoji_id}[/emojifxp]'
+			# fix images
+			if element.tag == 'img':
+				if class_name == 'lazy':
+					return f'[IMG]{element.attrib.get("data-src")}[/IMG]'
+				if class_name == 'inlineimg' and element.title:
+					return f'[IMG]{element.src}[/IMG]'
+				if class_name == 'emojifxp':
+					emoji_id = re.search(r'([^/]*)\.[^.]*$', element.src).group(1)
+					return f'[emojifxp={element.alt}]{emoji_id}[/emojifxp]'
 
-		# fix font
-		if element.tag == 'font':
-			if element.color:
-				return f'[COLOR={element.color}]{children}[/COLOR]'
-			if element.size:
-				return f'[SIZE={element.size}]{children}[/SIZE]'
+			# fix font
+			if element.tag == 'font':
+				if element.color:
+					return f'[COLOR={element.color}]{children}[/COLOR]'
+				if element.size:
+					return f'[SIZE={element.size}]{children}[/SIZE]'
 
-		# fix href
-		if element.tag == 'a':
-			return f'[url={element.href}]{children}[/url]'
+			# fix href
+			if element.tag == 'a':
+				return f'[url={element.href}]{children}[/url]'
 
-		# fix text tags
-		for e in ['b', 'u', 'i']:
-			if element.tag == e:
-				return f'[{e.upper()}]{children}[/{e.upper()}]'
+			# fix text tags
+			for e in ['b', 'u', 'i']:
+				if element.tag == e:
+					return f'[{e.upper()}]{children}[/{e.upper()}]'
+
+			if element.style == 'text-align: center;':
+				return f'[CENTER]{children}[/CENTER]'
+
+			if 'font-family' in element.style:
+				font_family = re.search(r'font-family: (.*)$', element.style).group(1)
+				return f'[FONT={font_family}]{children}[/FONT]'
+
+		except Exception as e:
+			pass
 
 		if children:
 			return children

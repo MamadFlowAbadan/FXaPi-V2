@@ -82,12 +82,12 @@ class Fxp:
 					})
 				else:
 					self.user_id = temp_fastfxp_user_id
-					self.livefxpext = re.search('{"userid":"(.+?)",', home_req.text).group(1)
+					self.livefxpext = re.search(r'{"userid":"(.+?)",', home_req.text).group(1)
 
-				self.securitytoken = re.search('SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
+				self.securitytoken = re.search(r'SECURITYTOKEN = "(.+?)";', home_req.text).group(1)
 
 				# 7/5
-				self.uienfxp = re.search('uienfxp = "(.+?)";', home_req.text).group(1)
+				self.uienfxp = re.search(r'uienfxp = "(.+?)";', home_req.text).group(1)
 
 				# 22/7
 				self.logged_in = True
@@ -141,7 +141,7 @@ class Fxp:
 			'parseurl': 1
 		})
 		if 'https://www.fxp.co.il/newthread.php?' not in r.url:
-			return int(re.search('t=(.*?)&p=(.*?)#post', r.url).group(1))
+			return int(re.search(r't=(.*?)&p=(.*?)#post', r.url).group(1))
 		else:
 			return False
 
@@ -180,7 +180,7 @@ class Fxp:
 			'poststarttime': int(time.time())
 		})
 		if 'newreply' in r.text:
-			return int(re.search('<newpostid>(.*?)</newpostid>', r.text).group(1))
+			return int(re.search(r'<newpostid>(.*?)</newpostid>', r.text).group(1))
 		else:
 			return False
 
@@ -205,7 +205,7 @@ class Fxp:
 				'editorid': 'vB_Editor_QE_1'
 			})
 
-			old_comment = re.search('tabindex="1">([^<]+)</textarea>', r.text)
+			old_comment = re.search(r'tabindex="1">([^<]+)</textarea>', r.text)
 			if old_comment is not None:
 				old_comment = old_comment.group(1)
 			else:
@@ -438,7 +438,7 @@ class Fxp:
 		r = requests.get('https://www.fxp.co.il/member.php', params={
 			'username': username
 		})
-		t = re.search('data-followid="(.+?)"', r.text)
+		t = re.search(r'data-followid="(.+?)"', r.text)
 		if t:
 			return t.group(1)
 		else:
@@ -497,9 +497,9 @@ class FastFxp(Fxp):
 				'u': self.user_id,
 				'web_fast_fxp': 1
 			})
-			self.username = re.search('<span class="member_username"><span style="(.+?)">(.+?)</span></span>', uesr_info_req.text).group(2)
-			self.uienfxp = re.search('uienfxp = "(.+?)";', uesr_info_req.text).group(1)
-			self.livefxpext = re.search('{"userid":"(.+?)",', uesr_info_req.text).group(1)
+			self.username = re.search(r'<span class="member_username"><span style="(.+?)">(.+?)</span></span>', uesr_info_req.text).group(2)
+			self.uienfxp = re.search(r'uienfxp = "(.+?)";', uesr_info_req.text).group(1)
+			self.livefxpext = re.search(r'{"userid":"(.+?)",', uesr_info_req.text).group(1)
 			self.logged_in = True
 			return True
 		else:
