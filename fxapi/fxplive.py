@@ -25,13 +25,13 @@ class FxpLive:
 				if debug:
 					self.socketio.ws.on_message = lambda ws, msg: (ws.on_message, print(msg))
 
-				# auth to receive simple events (pm/tags)
+				# register to basic events
 				self.socketio.emit(['message', json.dumps({
 					'userid': self.user.livefxpext
 				})])
 
 			else:
-				print('Please login before you trtying to create live connection')
+				print('Please login before you trying to create live connection')
 				return False
 
 		return self

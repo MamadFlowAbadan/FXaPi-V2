@@ -234,7 +234,7 @@ class SocketIO():
 			if not self.connecting:
 				break
 
-	def on_open(self, ws):
+	def on_open(self):
 		# self.ws = ws
 
 		# AmitAvr
@@ -247,14 +247,14 @@ class SocketIO():
 			self.send_messages_queue, self, ping_interval)
 		self.send_message_thread.start()
 
-	def on_message(self, ws, message):
+	def on_message(self, message):
 		p = self.socket_io_message(message)
 		logging.debug(f'receive packet: {p}')
 
 	def on_error(self, ws, error):
 		logging.error(f'ERROR: {error}')
 
-	def on_close(self, ws):
+	def on_close(self):
 		# AmitAvr
 		self.ws.connected = False
 
